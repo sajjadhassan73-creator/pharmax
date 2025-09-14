@@ -1,120 +1,58 @@
 // lib/screens/purchases/widgets/purchase_add_row.dart
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:pharmax/database/app_database.dart';
+import 'package:pharmax/models/product_model.dart';
+import 'package:pharmax/models/purchase_item.dart';
 
-import '../../../models/purchase_item.dart';
-import '../../../models/product_model.dart';
-import '../../../database/app_database.dart'; // 🟢 للوصول لقاعدة البيانات
-import '../../products/add_product_dialog.dart'; // 🟢 نافذة إضافة منتج
-import 'purchase_table_helpers.dart';
+class PurchaseAddRow extends StatelessWidget {
+  const PurchaseAddRow({
+    Key? key,
+    required this.db,
+    required this.initialProduct,
+    required this.onAdd,
+  }) : super(key: key);
 
-DataRow buildAddRow({
-  required BuildContext context,
-  required AppDatabase db,
-  required List<ProductModel> allProducts,
-  required void Function(PurchaseItem item) onAdd,
-}) {
-  final barcodeCtrl = TextEditingController();
-  final nameCtrl = TextEditingController();
-  final expiryCtrl = TextEditingController(
-    text: DateTime.now().toIso8601String().split('T').first,
-  );
-  final qtyCtrl = TextEditingController();
-  final costCtrl = TextEditingController();
-  final bonusCtrl = TextEditingController();
-  final priceCtrl = TextEditingController();
+  final AppDatabase db;
+  final ProductModel initialProduct;
+  final Function(PurchaseItem) onAdd;
 
-  ProductModel? selectedProduct;
-  String? selectedUnit;
-  double liveCostAfterBonus = 0.0;
-  double liveProfit = 0.0;
-  double? livePrice2;
-
-  return DataRow(
-    cells: [
-      const DataCell(Text("+")), // عمود الإضافة
-      DataCell(
-        TextField(
-          controller: barcodeCtrl,
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: "الرمز",
-          ),
-        ),
-      ),
-      DataCell(
-        TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: "الاسم التجاري",
-          ),
-        ),
-      ),
-      DataCell(
-        TextField(
-          controller: expiryCtrl,
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-          ),
-          keyboardType: TextInputType.datetime,
-        ),
-      ),
-      const DataCell(Text("وحدة")), // مؤقتًا
-      DataCell(
-        TextField(
-          controller: qtyCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: "0",
-          ),
-        ),
-      ),
-      DataCell(
-        TextField(
-          controller: costCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('إضافة صنف'),
+      content: SingleChildScrollView(
+        child: Column(
+          children: [
+            Text('المنتج: ${initialProduct.name}'),
           ],
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: "0.00",
-          ),
         ),
       ),
-      DataCell(
-        TextField(
-          controller: bonusCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: "0",
-          ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('إلغاء'),
         ),
-      ),
-      DataCell(Text(liveCostAfterBonus.toStringAsFixed(2))),
-      DataCell(Text(liveProfit.toStringAsFixed(2))),
-      DataCell(
-        TextField(
-          controller: priceCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
-          ],
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: "0.00",
-          ),
+        ElevatedButton(
+          onPressed: () {
+            final newItem = PurchaseItem(
+              productId: initialProduct.id,
+              name: initialProduct.name,
+              unit: initialProduct.unit,
+              quantity: 1,
+              cost: initialProduct.primaryCost,
+              price: initialProduct.primaryPrice,
+              bonus: 0,
+              profitPercentage: 0,
+              expiry: DateTime.now().add(const Duration(days: 365)),
+            );
+            onAdd(newItem);
+            Navigator.of(context).pop();
+          },
+          child: const Text('إضافة'),
         ),
-      ),
-      const DataCell(Text("0.00")), // السعر 2
-      const DataCell(Text("0.00")), // مجموع الكلفة
-      const DataCell(Text("0.00")), // مجموع السعر
-    ],
-  );
+      ],
+    );
+  }
 }

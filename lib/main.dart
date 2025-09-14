@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:pharmax/screens/dashboard_screen.dart';
+import 'package:pharmax/services/auth_service.dart';
+import 'package:pharmax/screens/login_screen.dart';
 
-import 'database/app_database.dart';
-import 'screens/dashboard_screen.dart';
-
-void main() {
-  runApp(
-    Provider<AppDatabase>(
-      create: (_) => AppDatabase(),
-      dispose: (_, db) => db.close(),
-      child: const MyApp(),
-    ),
-  );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final authService = AuthService();
+  final user = await authService.getCurrentUser();
+  runApp(MyApp(isLoggedIn: user != null));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+
+  const MyApp({Key? key, required this.isLoggedIn}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Pharmax',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: 'Cairo',
       ),
-      home: const DashboardScreen(userCode: 'admin'),
+      home: isLoggedIn ? const DashboardScreen() : const LoginScreen(),
     );
   }
 }
